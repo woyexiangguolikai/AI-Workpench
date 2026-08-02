@@ -8,9 +8,57 @@
     "dev": "vite",
     "dev:desktop": "concurrently -k \"vite\" \"wait-on http://127.0.0.1:5173 && cross-env VITE_DEV_SERVER_URL=http://127.0.0.1:5173 electron .\"",
     "build": "tsc -b && vite build",
+    "dist": "npm run build && electron-builder --win",
+    "dist:portable": "npm run build && electron-builder --win portable",
     "desktop": "npm run build && electron .",
     "test": "vitest run",
     "test:watch": "vitest"
+  },
+  "build": {
+    "appId": "com.aiworkpench.desktop",
+    "productName": "AI-Workpench",
+    "directories": {
+      "output": "release-build"
+    },
+    "files": [
+      "dist/**/*",
+      "electron/**/*",
+      "package.json"
+    ],
+    "asar": true,
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "artifactName": "AI-Workpench-Setup-${version}.${ext}"
+    },
+    "portable": {
+      "artifactName": "AI-Workpench-${version}-portable.${ext}"
+    },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "woyexiangguolikai",
+        "repo": "AI-Workpench"
+      }
+    ]
   },
   "dependencies": {
     "lucide-react": "^0.468.0",
@@ -32,6 +80,7 @@
     "concurrently": "^9.1.0",
     "cross-env": "^7.0.3",
     "electron": "^33.2.1",
+    "electron-builder": "^26.15.3",
     "jsdom": "^25.0.1",
     "typescript": "~5.7.2",
     "vite": "^6.0.5",
