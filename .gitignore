@@ -1,0 +1,20 @@
+node_modules/
+dist/
+build/
+.electron/
+.npm-cache/
+.reasonix/
+.env
+.env.*
+!.env.example
+*.local
+.DS_Store
+Thumbs.db
+docs/agents/tmp/
+*.log
+
+# tsc -b 构建产物
+vite.config.js
+vite.config.d.ts
+tsconfig.tsbuildinfo
+tsconfig.node.tsbuildinfo
