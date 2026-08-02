@@ -4,6 +4,7 @@ build/
 .electron/
 release/
 release-build/
+release-build-*/
 .npm-cache/
 .reasonix/
 .env
