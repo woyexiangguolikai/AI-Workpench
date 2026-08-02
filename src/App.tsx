@@ -20,7 +20,7 @@ import {
   tasks,
 } from './data';
 import { createWorkCard, reconcileDailyTotals } from './lib/workbench';
-import type { KnowledgeCandidate, ViewId, WorkCard } from './types';
+import type { DirectorySummary, KnowledgeCandidate, ViewId, WorkCard } from './types';
 import { TodayView } from './ui/TodayView';
 import { InboxView } from './ui/InboxView';
 import { ProjectsView } from './ui/ProjectsView';
@@ -47,7 +47,10 @@ function App() {
   const [workCards, setWorkCards] = useState<WorkCard[]>([]);
   const [knowledge, setKnowledge] = useState<KnowledgeCandidate[]>(knowledgeCandidates);
   const [reconRows, setReconRows] = useState(reconciliationRows);
-  const [selectedFolder, setSelectedFolder] = useState('D:\\客户资料\\北城医科大学');
+  const [selectedFolder, setSelectedFolder] = useState(
+    () => localStorage.getItem('aiwp:selectedFolder') || 'D:\\客户资料\\北城医科大学',
+  );
+  const [folderSummary, setFolderSummary] = useState<DirectorySummary | null>(null);
   const [toast, setToast] = useState('');
 
   const showToast = (message: string) => {
@@ -67,15 +70,39 @@ function App() {
   };
 
   const handleSelectFolder = async () => {
+    const applyFolder = (folder: string) => {
+      localStorage.setItem('aiwp:selectedFolder', folder);
+      setSelectedFolder(folder);
+    };
+
     if (window.desktop) {
       const folder = await window.desktop.selectDirectory();
-      if (folder) {
-        setSelectedFolder(folder);
-        showToast('目录已选择');
+      if (!folder) return;
+      applyFolder(folder);
+      try {
+        await window.desktop.addAllowedDir(folder);
+        const summary = await window.desktop.directory.scan(folder);
+        setFolderSummary(summary);
+        showToast(`已选择 ${folder}，发现 ${summary.fileCount} 个文件`);
+      } catch (_) {
+        showToast('目录已选择，但扫描失败');
       }
       return;
     }
-    setSelectedFolder('D:\\客户资料\\演示目录');
+
+    const demoFolder = 'D:\\客户资料\\演示目录';
+    applyFolder(demoFolder);
+    setFolderSummary({
+      folder: demoFolder,
+      fileCount: 28,
+      notes: 9,
+      documents: 6,
+      spreadsheets: 5,
+      pdfs: 4,
+      images: 2,
+      other: 2,
+      sampleFiles: ['项目台账.xlsx', '需求说明书.docx', '投标文件.pdf', '会议纪要.md'],
+    });
     showToast('浏览器预览模式：已使用演示目录');
   };
 
@@ -141,7 +168,15 @@ function App() {
         <header className="topbar">
           <div>
             <h1>{navItems.find((item) => item.id === view)?.label}</h1>
-            <p>2026-08-02 星期日 · 所有状态以 Obsidian 与本地文件为准</p>
+            <p>2026-08-02 星期日 · 当前资料目录</p>
+            <span className="folder-path">{selectedFolder}</span>
+            {folderSummary && (
+              <div className="folder-summary">
+                已扫描 {folderSummary.fileCount} 个文件：Markdown {folderSummary.notes} · Word{' '}
+                {folderSummary.documents} · Excel {folderSummary.spreadsheets} · PDF{' '}
+                {folderSummary.pdfs}
+              </div>
+            )}
           </div>
           <button className="primary-button" type="button" onClick={handleSelectFolder}>
             <FolderOpen size={16} />
@@ -172,7 +207,11 @@ function App() {
             <ReconciliationView rows={reconRows} onImport={handleImportReconciliation} />
           )}
           {view === 'settings' && (
-            <SettingsView selectedFolder={selectedFolder} onSelectFolder={handleSelectFolder} />
+            <SettingsView
+              selectedFolder={selectedFolder}
+              folderSummary={folderSummary}
+              onSelectFolder={handleSelectFolder}
+            />
           )}
         </section>
       </main>

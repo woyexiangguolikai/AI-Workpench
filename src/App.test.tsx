@@ -3,6 +3,10 @@ import userEvent from '@testing-library/user-event';
 import App from './App';
 
 describe('App', () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
   it('renders today view and all main navigation entries', () => {
     render(<App />);
 
@@ -24,6 +28,16 @@ describe('App', () => {
 
     expect(screen.getByRole('heading', { name: '数据与模型' })).toBeInTheDocument();
     expect(screen.getByText('DeepSeek 已配置')).toBeInTheDocument();
+  });
+
+  it('shows the selected directory immediately', async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(screen.getByRole('button', { name: '选择目录' }));
+
+    expect(screen.getByText('D:\\客户资料\\演示目录')).toBeInTheDocument();
+    expect(screen.getByText(/已扫描 28 个文件/)).toBeInTheDocument();
   });
 
   it('creates a work card from a one-line inbox requirement', async () => {

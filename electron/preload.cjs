@@ -9,6 +9,11 @@ contextBridge.exposeInMainWorld('desktop', {
   addAllowedDir: (dirPath) => ipcRenderer.invoke('workspace:addAllowedDir', dirPath),
   getAllowedDirs: () => ipcRenderer.invoke('workspace:getAllowedDirs'),
 
+  // Directory summary
+  directory: {
+    scan: (dirPath) => ipcRenderer.invoke('directory:scan', dirPath),
+  },
+
   // Projects (类型化服务接口，替代原始 SQL)
   projects: {
     list: () => ipcRenderer.invoke('projects:list'),

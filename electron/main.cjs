@@ -174,6 +174,80 @@ ipcMain.handle('dialog:selectDirectory', async () => {
   return result.canceled ? null : result.filePaths[0];
 });
 
+/** 扫描目录并按常用业务文档类型汇总，供渲染进程直接展示 */
+async function scanDirectory(dirPath) {
+  if (!dirPath || typeof dirPath !== 'string') {
+    throw new Error('目录路径无效');
+  }
+  if (!isPathAllowed(dirPath)) {
+    throw new Error('路径不在允许的目录范围内: ' + dirPath);
+  }
+  if (!fs.existsSync(dirPath)) {
+    throw new Error('目录不存在: ' + dirPath);
+  }
+
+  const summary = {
+    folder: path.resolve(dirPath),
+    fileCount: 0,
+    notes: 0,
+    documents: 0,
+    spreadsheets: 0,
+    pdfs: 0,
+    images: 0,
+    other: 0,
+    sampleFiles: [],
+  };
+  const maxFiles = 5000;
+
+  async function walk(current) {
+    let entries;
+    try {
+      entries = await fs.promises.readdir(current, { withFileTypes: true });
+    } catch (_) {
+      return;
+    }
+
+    for (const entry of entries) {
+      if (summary.fileCount >= maxFiles) return;
+      if (entry.name.startsWith('.') || entry.name === 'node_modules' || entry.name === '.git') {
+        continue;
+      }
+
+      const fullPath = path.join(current, entry.name);
+      if (entry.isDirectory()) {
+        await walk(fullPath);
+        continue;
+      }
+      if (!entry.isFile()) continue;
+
+      summary.fileCount += 1;
+      const ext = path.extname(entry.name).toLowerCase();
+      if (ext === '.md' || ext === '.markdown') {
+        summary.notes += 1;
+      } else if (ext === '.doc' || ext === '.docx') {
+        summary.documents += 1;
+      } else if (ext === '.xls' || ext === '.xlsx' || ext === '.csv') {
+        summary.spreadsheets += 1;
+      } else if (ext === '.pdf') {
+        summary.pdfs += 1;
+      } else if (['.png', '.jpg', '.jpeg', '.gif', '.bmp', '.webp'].includes(ext)) {
+        summary.images += 1;
+      } else {
+        summary.other += 1;
+      }
+
+      if (summary.sampleFiles.length < 8) {
+        summary.sampleFiles.push(entry.name);
+      }
+    }
+  }
+
+  await walk(path.resolve(dirPath));
+  return summary;
+}
+
+ipcMain.handle('directory:scan', async (_event, dirPath) => scanDirectory(dirPath));
+
 ipcMain.handle('app:getAppInfo', () => ({
   name: 'AI-Workpench',
   version: app.getVersion(),

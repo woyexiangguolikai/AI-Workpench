@@ -1,3 +1,5 @@
+import type { DirectorySummary } from './types';
+
 /// <reference types="vite/client" />
 
 interface DesktopBridge {
@@ -8,6 +10,11 @@ interface DesktopBridge {
   // Workspace
   addAllowedDir: (dirPath: string) => Promise<{ allowedDirs: string[] }>;
   getAllowedDirs: () => Promise<string[]>;
+
+  // Directory summary
+  directory: {
+    scan: (dirPath: string) => Promise<DirectorySummary>;
+  };
 
   // Projects (类型化服务接口)
   projects: {

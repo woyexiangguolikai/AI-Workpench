@@ -100,6 +100,18 @@ export interface ReconciliationRow {
   status: '一致' | '差异';
 }
 
+export interface DirectorySummary {
+  folder: string;
+  fileCount: number;
+  notes: number;
+  documents: number;
+  spreadsheets: number;
+  pdfs: number;
+  images: number;
+  other: number;
+  sampleFiles: string[];
+}
+
 export interface GanttItem {
   taskId: string;
   title: string;

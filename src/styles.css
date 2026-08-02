@@ -143,6 +143,22 @@ button:focus-visible {
   font-size: 13px;
 }
 
+.folder-path {
+  display: block;
+  max-width: 760px;
+  margin-top: 6px;
+  color: #2563eb;
+  font-family: Consolas, "Courier New", monospace;
+  font-size: 12px;
+  word-break: break-all;
+}
+
+.folder-summary {
+  margin-top: 5px;
+  color: #0f766e;
+  font-size: 12px;
+}
+
 .content-area {
   padding-top: 20px;
 }

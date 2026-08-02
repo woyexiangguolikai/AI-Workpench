@@ -4,13 +4,13 @@
 
 ## 最新版本下载
 
-当前 Release 标签：`v0.1.5`
+当前 Release 标签：`v0.1.6`
 
-- [安装版下载](https://github.com/woyexiangguolikai/AI-Workpench/releases/download/v0.1.5/AI-Workpench-Setup-0.1.0.exe)
-- [免安装版下载](https://github.com/woyexiangguolikai/AI-Workpench/releases/download/v0.1.5/AI-Workpench-0.1.0-portable.exe)
-- [Release 页面](https://github.com/woyexiangguolikai/AI-Workpench/releases/tag/v0.1.5)
+- [安装版下载](https://github.com/woyexiangguolikai/AI-Workpench/releases/download/v0.1.6/AI-Workpench-Setup-0.1.6.exe)
+- [免安装版下载](https://github.com/woyexiangguolikai/AI-Workpench/releases/download/v0.1.6/AI-Workpench-0.1.6-portable.exe)
+- [Release 页面](https://github.com/woyexiangguolikai/AI-Workpench/releases/tag/v0.1.6)
 
-> 文件名中的 `0.1.0` 来自 `package.json` 版本号；Release 标签 `v0.1.5` 才是最新版本。两个 exe 均无需安装 Node、npm 或 Git。
+> 两个 exe 均无需安装 Node、npm 或 Git。
 
 如果 Windows 显示“已保护你的电脑”，请点击“更多信息”，然后选择“仍要运行”。当前版本未做商业代码签名，首次测试会遇到这个提示。
 

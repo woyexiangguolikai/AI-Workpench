@@ -1,11 +1,13 @@
 import { Cloud, FolderOpen } from 'lucide-react';
+import type { DirectorySummary } from '../types';
 
 interface SettingsViewProps {
   selectedFolder: string;
+  folderSummary: DirectorySummary | null;
   onSelectFolder: () => void;
 }
 
-export function SettingsView({ selectedFolder, onSelectFolder }: SettingsViewProps) {
+export function SettingsView({ selectedFolder, folderSummary, onSelectFolder }: SettingsViewProps) {
   return (
     <div className="view-stack settings-grid">
       <section className="panel">
@@ -25,7 +27,15 @@ export function SettingsView({ selectedFolder, onSelectFolder }: SettingsViewPro
         <div className="setting-row">
           <span>资料目录</span>
           <strong>{selectedFolder}</strong>
-          <small>只读取你明确指定的目录，不静默扫描全盘。</small>
+          {folderSummary ? (
+            <small>
+              已扫描 {folderSummary.fileCount} 个文件：Markdown {folderSummary.notes} · Word{' '}
+              {folderSummary.documents} · Excel {folderSummary.spreadsheets} · PDF{' '}
+              {folderSummary.pdfs}
+            </small>
+          ) : (
+            <small>只读取你明确指定的目录，不静默扫描全盘。</small>
+          )}
         </div>
       </section>
 
