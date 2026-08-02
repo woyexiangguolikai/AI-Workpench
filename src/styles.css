@@ -153,6 +153,33 @@ button:focus-visible {
   word-break: break-all;
 }
 
+.folder-error {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  padding: 10px 14px;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  background: #fef2f2;
+  color: #991b1b;
+  font-size: 13px;
+}
+
+.folder-error .error-dismiss {
+  margin-left: auto;
+  padding: 2px;
+  border-radius: 4px;
+  background: transparent;
+  color: #991b1b;
+  opacity: 0.6;
+}
+
+.folder-error .error-dismiss:hover {
+  opacity: 1;
+  background: #fee2e2;
+}
+
 .folder-summary {
   margin-top: 5px;
   color: #0f766e;

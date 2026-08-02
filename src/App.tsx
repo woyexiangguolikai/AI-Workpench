@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import {
+  AlertTriangle,
   Brain,
   Cloud,
   FileText,
@@ -11,6 +12,7 @@ import {
   Settings,
   Sparkles,
   Sun,
+  XCircle,
 } from 'lucide-react';
 import {
   documentDrafts,
@@ -51,6 +53,7 @@ function App() {
     () => localStorage.getItem('aiwp:selectedFolder') || 'D:\\客户资料\\北城医科大学',
   );
   const [folderSummary, setFolderSummary] = useState<DirectorySummary | null>(null);
+  const [folderError, setFolderError] = useState<string | null>(null);
   const [toast, setToast] = useState('');
 
   const showToast = (message: string) => {
@@ -76,6 +79,7 @@ function App() {
     };
 
     if (window.desktop) {
+      setFolderError(null);
       const folder = await window.desktop.selectDirectory();
       if (!folder) return;
       applyFolder(folder);
@@ -83,15 +87,21 @@ function App() {
         await window.desktop.addAllowedDir(folder);
         const summary = await window.desktop.directory.scan(folder);
         setFolderSummary(summary);
+        setFolderError(null);
         showToast(`已选择 ${folder}，发现 ${summary.fileCount} 个文件`);
-      } catch (_) {
-        showToast('目录已选择，但扫描失败');
+      } catch (err) {
+        const message =
+          err instanceof Error ? err.message : '未知错误';
+        setFolderSummary(null);
+        setFolderError(`扫描失败：${message}`);
+        showToast('目录已选择，但扫描失败（详见顶部提示）');
       }
       return;
     }
 
     const demoFolder = 'D:\\客户资料\\演示目录';
     applyFolder(demoFolder);
+    setFolderError(null);
     setFolderSummary({
       folder: demoFolder,
       fileCount: 28,
@@ -170,7 +180,21 @@ function App() {
             <h1>{navItems.find((item) => item.id === view)?.label}</h1>
             <p>2026-08-02 星期日 · 当前资料目录</p>
             <span className="folder-path">{selectedFolder}</span>
-            {folderSummary && (
+            {folderError && (
+              <div className="folder-error" role="alert">
+                <AlertTriangle size={14} />
+                <span>{folderError}</span>
+                <button
+                  type="button"
+                  className="error-dismiss"
+                  onClick={() => setFolderError(null)}
+                  aria-label="关闭错误提示"
+                >
+                  <XCircle size={14} />
+                </button>
+              </div>
+            )}
+            {!folderError && folderSummary && (
               <div className="folder-summary">
                 已扫描 {folderSummary.fileCount} 个文件：Markdown {folderSummary.notes} · Word{' '}
                 {folderSummary.documents} · Excel {folderSummary.spreadsheets} · PDF{' '}
