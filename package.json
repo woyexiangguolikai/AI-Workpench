@@ -1,6 +1,6 @@
 {
   "name": "ai-workpench",
-  "version": "0.1.7",
+  "version": "0.1.8",
   "private": true,
   "description": "AI 智能工作台本地桌面端",
   "main": "electron/main.cjs",

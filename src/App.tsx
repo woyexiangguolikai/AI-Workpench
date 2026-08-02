@@ -15,14 +15,31 @@ import {
   XCircle,
 } from 'lucide-react';
 import {
-  documentDrafts,
-  inboxItems,
-  knowledgeCandidates,
+  documentDrafts as demoDocs,
+  inboxItems as demoInbox,
+  knowledgeCandidates as demoKnowledge,
+  projects as demoProjects,
   reconciliationRows,
-  tasks,
+  requirements as demoRequirements,
+  tasks as demoTasks,
 } from './data';
 import { createWorkCard, reconcileDailyTotals } from './lib/workbench';
-import type { DirectorySummary, KnowledgeCandidate, ViewId, WorkCard } from './types';
+import {
+  mapFilesToDocuments,
+  mapFilesToInboxItems,
+  mapFilesToKnowledgeCandidates,
+  mapFilesToProjects,
+  type FileEntry,
+} from './lib/material-loader';
+import type {
+  DirectorySummary,
+  DocumentDraft,
+  InboxItem,
+  KnowledgeCandidate,
+  Project,
+  ViewId,
+  WorkCard,
+} from './types';
 import { TodayView } from './ui/TodayView';
 import { InboxView } from './ui/InboxView';
 import { ProjectsView } from './ui/ProjectsView';
@@ -47,7 +64,7 @@ function App() {
   const [view, setView] = useState<ViewId>('today');
   const [inboxText, setInboxText] = useState('');
   const [workCards, setWorkCards] = useState<WorkCard[]>([]);
-  const [knowledge, setKnowledge] = useState<KnowledgeCandidate[]>(knowledgeCandidates);
+  const [knowledge, setKnowledge] = useState<KnowledgeCandidate[]>(demoKnowledge);
   const [reconRows, setReconRows] = useState(reconciliationRows);
   const [selectedFolder, setSelectedFolder] = useState(
     () => localStorage.getItem('aiwp:selectedFolder') || 'D:\\客户资料\\北城医科大学',
@@ -56,9 +73,46 @@ function App() {
   const [folderError, setFolderError] = useState<string | null>(null);
   const [toast, setToast] = useState('');
 
+  // 真实材料数据（Electron 模式加载，浏览器模式为 null）
+  const [realDocs, setRealDocs] = useState<DocumentDraft[] | null>(null);
+  const [realProjects, setRealProjects] = useState<Project[] | null>(null);
+  const [realInbox, setRealInbox] = useState<InboxItem[] | null>(null);
+  const [_realKnowledge, setRealKnowledge] = useState<KnowledgeCandidate[] | null>(null);
+
+  // 使用真实数据或回退到演示数据
+  const documents: DocumentDraft[] = realDocs ?? demoDocs;
+  const projects: Project[] = realProjects ?? demoProjects;
+  const inboxItems: InboxItem[] = realInbox ?? demoInbox;
+
   const showToast = (message: string) => {
     setToast(message);
     window.setTimeout(() => setToast(''), 2600);
+  };
+
+  /** 加载目录中的真实文件并映射为工作台数据 */
+  const loadRealFiles = async (folder: string) => {
+    if (!window.desktop) return;
+    try {
+      const files = await window.desktop.directory.listFiles(folder) as FileEntry[];
+      const docs = mapFilesToDocuments(files, folder.replace(/\\/g, '/').split('/').pop() || folder);
+      const prjs = mapFilesToProjects(files, folder);
+      const inbox = mapFilesToInboxItems(files);
+      const kn = mapFilesToKnowledgeCandidates(files);
+
+      setRealDocs(docs);
+      setRealProjects(prjs);
+      setRealInbox(inbox);
+      setRealKnowledge(kn);
+      setKnowledge(kn);
+    } catch (err) {
+      // 加载失败时显示空状态，不回退到演示数据
+      setRealDocs([]);
+      setRealProjects([]);
+      setRealInbox([]);
+      setRealKnowledge([]);
+      setKnowledge([]);
+      throw err; // 重新抛出给上层 catch 显示错误
+    }
   };
 
   const handleRecognizeInbox = () => {
@@ -66,7 +120,8 @@ function App() {
       showToast('请先粘贴一句话需求');
       return;
     }
-    const card = createWorkCard(inboxText, '北城医科大学食堂平台');
+    const firstProject = projects.length > 0 ? projects[0]!.name : '待归属项目';
+    const card = createWorkCard(inboxText, firstProject);
     setWorkCards((current) => [card, ...current]);
     setInboxText('');
     showToast('已生成需求工作卡，待你确认');
@@ -88,17 +143,24 @@ function App() {
         const summary = await window.desktop.directory.scan(folder);
         setFolderSummary(summary);
         setFolderError(null);
+        // 加载真实文件并映射为工作台数据
+        await loadRealFiles(folder);
         showToast(`已选择 ${folder}，发现 ${summary.fileCount} 个文件`);
       } catch (err) {
         const message =
           err instanceof Error ? err.message : '未知错误';
         setFolderSummary(null);
+        setRealDocs([]);
+        setRealProjects([]);
+        setRealInbox([]);
+        setRealKnowledge([]);
         setFolderError(`扫描失败：${message}`);
         showToast('目录已选择，但扫描失败（详见顶部提示）');
       }
       return;
     }
 
+    // 浏览器预览模式：使用演示数据
     const demoFolder = 'D:\\客户资料\\演示目录';
     applyFolder(demoFolder);
     setFolderError(null);
@@ -113,6 +175,11 @@ function App() {
       other: 2,
       sampleFiles: ['项目台账.xlsx', '需求说明书.docx', '投标文件.pdf', '会议纪要.md'],
     });
+    setRealDocs(null);
+    setRealProjects(null);
+    setRealInbox(null);
+    setRealKnowledge(null);
+    setKnowledge(demoKnowledge);
     showToast('浏览器预览模式：已使用演示目录');
   };
 
@@ -210,7 +277,12 @@ function App() {
 
         <section className="content-area">
           {view === 'today' && (
-            <TodayView workCards={workCards} onToast={showToast} />
+            <TodayView
+              workCards={workCards}
+              projects={projects}
+              tasks={realDocs !== null ? [] : demoTasks}
+              onToast={showToast}
+            />
           )}
           {view === 'inbox' && (
             <InboxView
@@ -221,9 +293,14 @@ function App() {
               inboxItems={inboxItems}
             />
           )}
-          {view === 'projects' && <ProjectsView />}
-          {view === 'tasks' && <TasksView tasks={tasks} />}
-          {view === 'documents' && <DocumentsView documents={documentDrafts} onToast={showToast} />}
+          {view === 'projects' && <ProjectsView projects={projects} />}
+          {view === 'tasks' && <TasksView tasks={realDocs !== null ? [] : demoTasks} requirements={realDocs !== null ? [] : demoRequirements} />}
+          {view === 'documents' && (
+            <DocumentsView
+              documents={documents}
+              onToast={showToast}
+            />
+          )}
           {view === 'knowledge' && (
             <KnowledgeView items={knowledge} onDecision={handleKnowledgeDecision} />
           )}

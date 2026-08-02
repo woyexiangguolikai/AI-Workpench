@@ -1,28 +1,37 @@
 import { AlertTriangle, CheckCircle2, Gauge, ListTodo, Sparkles } from 'lucide-react';
-import { tasks } from '../data';
-import type { WorkCard } from '../types';
+import { tasks as demoTasks } from '../data';
+import { projects as demoProjects } from '../data';
+import type { Project, Task, WorkCard } from '../types';
 import { MetricCard } from './MetricCard';
 
 interface TodayViewProps {
   workCards: WorkCard[];
+  projects?: Project[];
+  tasks?: Task[];
   onToast: (message: string) => void;
 }
 
-export function TodayView({ workCards, onToast }: TodayViewProps) {
+export function TodayView({ workCards, projects = demoProjects, tasks = demoTasks, onToast }: TodayViewProps) {
   const urgentCount = tasks.filter((task) => task.status === '待开始').length + workCards.length;
-  const dueItems = [
-    { title: '北城医科大学：确认支付分账口径', date: '今天 16:00', risk: '高' },
-    { title: '华东国企园区：一卡通模块影响评审', date: '明天 10:30', risk: '高' },
-    { title: '同济医院：营养餐台账测试用例', date: '08-05', risk: '中' },
-  ];
+
+  // 根据实际项目生成待办项，无项目时显示空状态
+  const dueItems = projects.length > 0
+    ? projects.slice(0, 5).map((p) => ({
+        title: `${p.name}：确认项目需求与排期`,
+        date: p.ddl || '待确认',
+        risk: p.risk === '待评估' ? '中' : '高',
+      }))
+    : [
+        { title: '选择一个目录以加载工作材料', date: '今天', risk: '高' },
+      ];
 
   return (
     <div className="view-stack">
       <div className="metric-grid">
         <MetricCard icon={ListTodo} label="今日待办" value={String(urgentCount)} tone="blue" />
-        <MetricCard icon={AlertTriangle} label="风险 DDL" value="2" tone="amber" />
-        <MetricCard icon={CheckCircle2} label="待审核" value="3" tone="green" />
-        <MetricCard icon={Gauge} label="本周节省估算" value="38%" tone="teal" />
+        <MetricCard icon={AlertTriangle} label="风险 DDL" value={String(projects.filter((p) => p.risk !== '待评估').length || '—')} tone="amber" />
+        <MetricCard icon={CheckCircle2} label="项目数" value={String(projects.length || '—')} tone="green" />
+        <MetricCard icon={Gauge} label="本周节省估算" value="—" tone="teal" />
       </div>
 
       <div className="two-column">

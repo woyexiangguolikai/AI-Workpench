@@ -12,6 +12,7 @@ contextBridge.exposeInMainWorld('desktop', {
   // Directory summary
   directory: {
     scan: (dirPath) => ipcRenderer.invoke('directory:scan', dirPath),
+    listFiles: (dirPath) => ipcRenderer.invoke('directory:listFiles', dirPath),
   },
 
   // Projects (类型化服务接口，替代原始 SQL)

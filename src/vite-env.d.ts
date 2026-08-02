@@ -14,6 +14,7 @@ interface DesktopBridge {
   // Directory summary
   directory: {
     scan: (dirPath: string) => Promise<DirectorySummary>;
+    listFiles: (dirPath: string) => Promise<Array<{ name: string; path: string; extension: string; size: number; modifiedAt: string }>>;
   };
 
   // Projects (类型化服务接口)

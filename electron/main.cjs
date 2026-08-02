@@ -248,6 +248,65 @@ async function scanDirectory(dirPath) {
 
 ipcMain.handle('directory:scan', async (_event, dirPath) => scanDirectory(dirPath));
 
+/** 递归列出目录中所有文件的详细信息（用于前端数据映射） */
+async function listFiles(dirPath) {
+  if (!dirPath || typeof dirPath !== 'string') {
+    throw new Error('目录路径无效');
+  }
+  if (!isPathAllowed(dirPath)) {
+    throw new Error('路径不在允许的目录范围内: ' + dirPath);
+  }
+  if (!fs.existsSync(dirPath)) {
+    throw new Error('目录不存在: ' + dirPath);
+  }
+
+  const files = [];
+  const maxFiles = 5000;
+
+  async function walk(current) {
+    let entries;
+    try {
+      entries = await fs.promises.readdir(current, { withFileTypes: true });
+    } catch (_) {
+      return;
+    }
+
+    for (const entry of entries) {
+      if (files.length >= maxFiles) return;
+      if (entry.name.startsWith('.') || entry.name === 'node_modules' || entry.name === '.git') {
+        continue;
+      }
+
+      const fullPath = path.join(current, entry.name);
+      if (entry.isDirectory()) {
+        await walk(fullPath);
+        continue;
+      }
+      if (!entry.isFile()) continue;
+
+      let stat;
+      try {
+        stat = await fs.promises.stat(fullPath);
+      } catch (_) {
+        continue;
+      }
+
+      files.push({
+        name: entry.name,
+        path: fullPath,
+        extension: path.extname(entry.name).toLowerCase().replace('.', ''),
+        size: stat.size,
+        modifiedAt: stat.mtime.toISOString(),
+      });
+    }
+  }
+
+  await walk(path.resolve(dirPath));
+  return files;
+}
+
+ipcMain.handle('directory:listFiles', async (_event, dirPath) => listFiles(dirPath));
+
 ipcMain.handle('app:getAppInfo', () => ({
   name: 'AI-Workpench',
   version: app.getVersion(),

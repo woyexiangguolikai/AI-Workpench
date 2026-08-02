@@ -4,11 +4,11 @@
 
 ## 最新版本下载
 
-当前 Release 标签：`v0.1.7`
+当前 Release 标签：`v0.1.8`
 
-- [安装版下载](https://github.com/woyexiangguolikai/AI-Workpench/releases/download/v0.1.7/AI-Workpench-Setup-0.1.7.exe)
-- [免安装版下载](https://github.com/woyexiangguolikai/AI-Workpench/releases/download/v0.1.7/AI-Workpench-0.1.7-portable.exe)
-- [Release 页面](https://github.com/woyexiangguolikai/AI-Workpench/releases/tag/v0.1.7)
+- [安装版下载](https://github.com/woyexiangguolikai/AI-Workpench/releases/download/v0.1.8/AI-Workpench-Setup-0.1.8.exe)
+- [免安装版下载](https://github.com/woyexiangguolikai/AI-Workpench/releases/download/v0.1.8/AI-Workpench-0.1.8-portable.exe)
+- [Release 页面](https://github.com/woyexiangguolikai/AI-Workpench/releases/tag/v0.1.8)
 
 > 两个 exe 均无需安装 Node、npm 或 Git。
 

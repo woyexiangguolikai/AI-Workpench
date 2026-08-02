@@ -19,9 +19,36 @@ function mockDesktop(overrides: Record<string, unknown> = {}) {
         other: 0,
         sampleFiles: ['test.md'],
       }),
+      listFiles: async () => [
+        { name: '方案.docx', path: 'D:\\项目\\测试目录\\方案.docx', extension: 'docx', size: 1024, modifiedAt: '2026-08-01T10:00:00Z' },
+        { name: '数据.xlsx', path: 'D:\\项目\\测试目录\\数据.xlsx', extension: 'xlsx', size: 2048, modifiedAt: '2026-08-02T10:00:00Z' },
+      ],
     },
     ...overrides,
   } as unknown as typeof window.desktop;
+
+  // overrides.directory 需要嵌套合并，而非顶层覆盖
+  if (overrides.directory) {
+    delete (mock as unknown as Record<string, unknown>).directory;
+    (mock as unknown as Record<string, unknown>).directory = {
+      scan: async () => ({
+        folder: 'D:\\项目\\测试目录',
+        fileCount: 12,
+        notes: 3,
+        documents: 4,
+        spreadsheets: 2,
+        pdfs: 2,
+        images: 1,
+        other: 0,
+        sampleFiles: ['test.md'],
+      }),
+      listFiles: async () => [
+        { name: '方案.docx', path: 'D:\\项目\\测试目录\\方案.docx', extension: 'docx', size: 1024, modifiedAt: '2026-08-01T10:00:00Z' },
+        { name: '数据.xlsx', path: 'D:\\项目\\测试目录\\数据.xlsx', extension: 'xlsx', size: 2048, modifiedAt: '2026-08-02T10:00:00Z' },
+      ],
+      ...(overrides.directory as Record<string, unknown> || {}),
+    };
+  }
 
   (window as unknown as Record<string, unknown>).desktop = mock;
   return mock;
@@ -180,6 +207,49 @@ describe('App', () => {
     // 设置页显示目录和扫描结果
     expect(screen.getAllByText('D:\\项目\\测试目录').length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByText(/已扫描 12 个文件/).length).toBeGreaterThanOrEqual(1);
+  });
+
+  // ─── Electron 模式：空目录不显示演示内容 ───
+
+  it('does not show demo projects or knowledge in Electron mode even with empty dir', async () => {
+    mockDesktop({
+      directory: {
+        listFiles: async () => [], // 空目录
+      },
+    });
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(screen.getByRole('button', { name: '选择目录' }));
+
+    // 目录路径更新了
+    expect(screen.getByText('D:\\项目\\测试目录')).toBeInTheDocument();
+    // 不出现演示项目名称
+    expect(screen.queryByText('北城医科大学食堂平台')).toBeNull();
+    expect(screen.queryByText('华东国企园区收银升级')).toBeNull();
+    expect(screen.queryByText('同济医院营养餐项目')).toBeNull();
+
+    // 知识库页面显示空状态，不出现演示知识
+    await user.click(screen.getByRole('button', { name: '知识库审核' }));
+    expect(screen.queryByText('医院食堂项目通常需要独立的营养餐结算台账')).toBeNull();
+    expect(screen.getByText(/选择一个包含文档的目录/)).toBeInTheDocument();
+
+    // 需求与任务页不出现演示需求
+    await user.click(screen.getByRole('button', { name: '需求与任务' }));
+    expect(screen.queryByText('高校食堂线上订餐支持多门店分账')).toBeNull();
+    expect(screen.queryByText('园区一卡通余额同步')).toBeNull();
+    expect(screen.queryByText('营养餐结算台账导出')).toBeNull();
+    expect(screen.getByText(/选择一个包含文件的目录/)).toBeInTheDocument();
+
+    // 文档页不出现硬编码 HTML 原型名称
+    await user.click(screen.getByRole('button', { name: '文档' }));
+    expect(screen.queryByText('北城医大·食堂订餐首页原型')).toBeNull();
+    expect(screen.queryByText('华东园区·收银升级交互原型')).toBeNull();
+    expect(screen.getByText(/选择一个包含文件的目录/)).toBeInTheDocument();
+
+    // 收件箱显示空状态
+    await user.click(screen.getByRole('button', { name: '统一收件箱' }));
+    expect(screen.getByText(/选择一个包含文件的目录/)).toBeInTheDocument();
   });
 
   // ─── 原有业务逻辑测试 ───

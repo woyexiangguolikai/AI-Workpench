@@ -1,6 +1,29 @@
-import { projects } from '../data';
+import { FolderKanban } from 'lucide-react';
+import type { Project } from '../types';
 
-export function ProjectsView() {
+interface ProjectsViewProps {
+  projects?: Project[];
+}
+
+export function ProjectsView({ projects = [] }: ProjectsViewProps) {
+  const hasData = projects.length > 0;
+
+  if (!hasData) {
+    return (
+      <div className="view-stack">
+        <section className="panel">
+          <div className="panel-header">
+            <h2>客户/项目档案</h2>
+          </div>
+          <div className="empty-state">
+            <FolderKanban size={22} />
+            <span>选择一个包含文件的目录，项目卡片将基于子目录自动生成。</span>
+          </div>
+        </section>
+      </div>
+    );
+  }
+
   return (
     <div className="view-stack">
       <section className="panel">

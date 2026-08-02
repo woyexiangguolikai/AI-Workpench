@@ -1,4 +1,4 @@
-import { ClipboardList, Sparkles } from 'lucide-react';
+import { ClipboardList, Inbox, Sparkles } from 'lucide-react';
 import type { InboxItem, WorkCard } from '../types';
 
 interface InboxViewProps {
@@ -43,20 +43,27 @@ export function InboxView({
             <span className="pill">{inboxItems.length}</span>
           </div>
           <div className="list-stack">
-            {inboxItems.map((item) => (
-              <div className="inbox-item" key={item.id}>
-                <div className="inbox-item-top">
-                  <span className="source-badge">{item.source}</span>
-                  <time>{item.receivedAt}</time>
-                </div>
-                <p>{item.text}</p>
-                <div className="inbox-meta">
-                  <span>{item.category}</span>
-                  <span>置信度 {Math.round(item.confidence * 100)}%</span>
-                  <span className="status-ok">{item.status}</span>
-                </div>
+            {inboxItems.length === 0 ? (
+              <div className="empty-state">
+                <Inbox size={22} />
+                <span>选择一个包含文件的目录，本地材料将自动显示在这里。</span>
               </div>
-            ))}
+            ) : (
+              inboxItems.map((item) => (
+                <div className="inbox-item" key={item.id}>
+                  <div className="inbox-item-top">
+                    <span className="source-badge">{item.source}</span>
+                    <time>{item.receivedAt}</time>
+                  </div>
+                  <p>{item.text}</p>
+                  <div className="inbox-meta">
+                    <span>{item.category}</span>
+                    <span>置信度 {Math.round(item.confidence * 100)}%</span>
+                    <span className="status-ok">{item.status}</span>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </section>
 
